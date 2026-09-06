@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nepal Projection — Order Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --obsidian:#0a0a0c;
+    --slate:#15171c;
+    --slate-2:#1d2028;
+    --gold:#d4af37;
+    --gold-soft:#e8cd7a;
+    --champagne:#f3e6c9;
+    --ivory:#ece8df;
+    --line: rgba(212,175,55,0.18);
+    --ok:#7fbf8f;
+    --err:#e08585;
+    --radius: 2px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--obsidian);
+    color:var(--ivory);
+    font-family:'Manrope',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600;
+    color:var(--champagne);
+    letter-spacing:0.01em;
+  }
+  a{color:inherit;}
+  ::selection{background:var(--gold);color:#111;}
+
+  /* fluid type */
+  h1{font-size: clamp(2.4rem, 5vw + 1rem, 4.6rem); line-height:1.05; margin:0;}
+  h2{font-size: clamp(1.7rem, 2.4vw + 1rem, 2.6rem); line-height:1.15; margin:0 0 .6rem;}
+  h3{font-size: clamp(1.15rem, 1vw + 0.8rem, 1.4rem); margin:0 0 .3rem;}
+  p{font-size: clamp(0.95rem, 0.3vw + 0.85rem, 1.05rem); line-height:1.65; color:#c9c5ba; margin:0 0 1rem;}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- nav ---------- */
+  header{
+    position:sticky; top:0; z-index:40;
+    background:rgba(10,10,12,0.75);
+    backdrop-filter:blur(14px) saturate(140%);
+    border-bottom:1px solid var(--line);
+  }
+  nav{display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1180px; margin:0 auto;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:'Cormorant Garamond',serif; font-size:1.5rem; color:var(--champagne);}
+  .brand .mark{width:26px;height:26px;border:1px solid var(--gold); border-radius:50%; display:grid; place-items:center; color:var(--gold); font-size:.8rem;}
+  .nav-links{display:flex; gap:28px; align-items:center;}
+  .nav-links a{font-size:.85rem; text-decoration:none; color:#d8d4c8; opacity:.85; transition:opacity .2s, color .2s;}
+  .nav-links a:hover{opacity:1; color:var(--gold-soft);}
+  .admin-btn{
+    border:1px solid var(--gold); color:var(--gold); background:transparent;
+    padding:9px 18px; font-size:.8rem; cursor:pointer; border-radius:var(--radius);
+    transition:all .25s ease; letter-spacing:.02em;
+  }
+  .admin-btn:hover{background:var(--gold); color:#0a0a0c; box-shadow:0 0 18px rgba(212,175,55,.45);}
+  .menu-toggle{display:none; background:none; border:none; color:var(--champagne); font-size:1.5rem; cursor:pointer;}
+
+  @media (max-width:820px){
+    .nav-links{position:fixed; top:64px; right:0; height:calc(100vh - 64px); width:min(78vw,320px);
+      background:var(--slate); flex-direction:column; align-items:flex-start; padding:32px 26px; gap:22px;
+      transform:translateX(100%); transition:transform .35s ease; border-left:1px solid var(--line);}
+    .nav-links.open{transform:translateX(0);}
+    .menu-toggle{display:block;}
+  }
+
+  /* ---------- hero ---------- */
+  .hero{position:relative; padding:120px 0 100px; overflow:hidden; border-bottom:1px solid var(--line);}
+  .hero::before{
+    content:""; position:absolute; inset:-20% -10%;
+    background:
+      radial-gradient(600px 300px at 20% 20%, rgba(212,175,55,0.10), transparent 60%),
+      radial-gradient(500px 400px at 85% 60%, rgba(212,175,55,0.07), transparent 65%);
+    pointer-events:none;
+  }
+  .particles{position:absolute; inset:0; overflow:hidden; pointer-events:none;}
+  .particle{
+    position:absolute; width:3px; height:3px; background:var(--gold); border-radius:50%;
+    opacity:.5; animation:float 14s linear infinite;
+    box-shadow:0 0 8px 2px rgba(212,175,55,.5);
+  }
+  @keyframes float{
+    0%{transform:translateY(110vh) translateX(0); opacity:0;}
+    10%{opacity:.6;}
+    90%{opacity:.4;}
+    100%{transform:translateY(-10vh) translateX(40px); opacity:0;}
+  }
+  .hero-inner{position:relative; z-index:1; display:grid; grid-template-columns:1.2fr .8fr; gap:48px; align-items:center;}
+  @media(max-width:900px){.hero-inner{grid-template-columns:1fr;}}
+  .eyebrow{color:var(--gold); font-size:.78rem; letter-spacing:.14em; margin-bottom:16px; display:block;}
+  .hero-cta{display:flex; gap:16px; margin-top:32px; flex-wrap:wrap;}
+  .btn{
+    padding:14px 30px; font-size:.9rem; border-radius:var(--radius); cursor:pointer; border:1px solid transparent;
+    transition:transform .2s ease, box-shadow .3s ease, background .3s ease; text-decoration:none; display:inline-block;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-gold{
+    background:linear-gradient(135deg, var(--gold-soft), var(--gold) 55%, #b8912b);
+    color:#12100a; font-weight:700;
+  }
+  .btn-gold:hover{box-shadow:0 6px 30px rgba(212,175,55,.4); transform:translateY(-2px);}
+  .btn-ghost{border-color:var(--line); color:var(--ivory); background:rgba(255,255,255,0.02);}
+  .btn-ghost:hover{border-color:var(--gold); color:var(--gold-soft);}
+
+  .hero-visual{
+    position:relative; aspect-ratio:1/1; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(212,175,55,.25), transparent 60%), var(--slate);
+    border:1px solid var(--line);
+    display:grid; place-items:center;
+  }
+  .hero-visual svg{width:62%; height:62%;}
+  .orbit{position:absolute; inset:6%; border:1px solid var(--line); border-radius:50%; animation:spin 22s linear infinite;}
+  .orbit::before{content:""; position:absolute; top:-4px; left:50%; width:8px; height:8px; background:var(--gold); border-radius:50%; box-shadow:0 0 10px 3px rgba(212,175,55,.6);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- sections generic ---------- */
+  section{padding:88px 0; border-bottom:1px solid var(--line);}
+  .section-head{max-width:640px; margin-bottom:48px;}
+  .section-head .eyebrow{display:block;}
+
+  /* ---------- pricing ---------- */
+  .tiers{display:grid; grid-template-columns:repeat(3,1fr); gap:24px;}
+  @media(max-width:900px){.tiers{grid-template-columns:1fr;}}
+  .tier{
+    background:linear-gradient(180deg, var(--slate), var(--slate-2));
+    border:1px solid var(--line); border-radius:var(--radius); padding:32px 28px;
+    position:relative; transition:transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+  }
+  .tier:hover{transform:translateY(-6px); border-color:var(--gold); box-shadow:0 20px 50px rgba(0,0,0,.4);}
+  .tier.featured{border-color:var(--gold); box-shadow:0 0 40px rgba(212,175,55,.12);}
+  .tier .price{font-family:'Cormorant Garamond',serif; color:var(--gold-soft); font-size:2.2rem; margin:10px 0;}
+  .tier ul{list-style:none; padding:0; margin:20px 0; color:#c9c5ba; font-size:.92rem;}
+  .tier li{padding:7px 0; border-top:1px solid rgba(255,255,255,.06);}
+  .tier li:first-child{border-top:none;}
+
+  .calc{
+    margin-top:56px; background:var(--slate); border:1px solid var(--line); border-radius:var(--radius);
+    padding:32px; display:grid; grid-template-columns:1fr 1fr; gap:32px;
+  }
+  @media(max-width:800px){.calc{grid-template-columns:1fr;}}
+  .calc-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-top:1px solid rgba(255,255,255,.06);}
+  .calc-row:first-child{border-top:none;}
+  .calc-row label{font-size:.92rem; color:#d8d4c8;}
+  .switch{position:relative; width:44px; height:24px;}
+  .switch input{opacity:0; width:0; height:0;}
+  .slider{position:absolute; inset:0; background:#333; border-radius:20px; cursor:pointer; transition:.3s;}
+  .slider::before{content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#ddd; border-radius:50%; transition:.3s;}
+  .switch input:checked + .slider{background:var(--gold);}
+  .switch input:checked + .slider::before{transform:translateX(20px); background:#141414;}
+  .calc-total{display:flex; flex-direction:column; align-items:flex-start; justify-content:center; border-left:1px solid var(--line); padding-left:32px;}
+  @media(max-width:800px){.calc-total{border-left:none; border-top:1px solid var(--line); padding-left:0; padding-top:24px;}}
+  .calc-total .amount{font-family:'Cormorant Garamond',serif; font-size:3rem; color:var(--gold); transition:transform .15s ease;}
+  .amount.bump{transform:scale(1.06);}
+
+  /* ---------- team ---------- */
+  .team-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:24px;}
+  .card{
+    background:var(--slate); border:1px solid var(--line); border-radius:var(--radius);
+    padding:26px; text-align:left; transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease;
+    transform-style:preserve-3d;
+  }
+  .card:hover{transform:translateY(-8px) rotateX(2deg); box-shadow:0 24px 60px rgba(0,0,0,.45); border-color:var(--gold);}
+  .avatar{
+    width:64px; height:64px; border-radius:50%; margin-bottom:16px;
+    background:conic-gradient(from 180deg, var(--gold), var(--slate-2), var(--gold));
+    display:grid; place-items:center; font-family:'Cormorant Garamond',serif; font-size:1.3rem; color:#0c0c0e;
+  }
+  .role{color:var(--gold-soft); font-size:.8rem; letter-spacing:.04em; margin-bottom:10px; display:block;}
+  .card a.contact{font-size:.82rem; color:var(--gold); text-decoration:none; border-bottom:1px solid var(--gold);}
+
+  /* ---------- order form ---------- */
+  .order-shell{display:grid; grid-template-columns:.9fr 1.1fr; gap:40px; align-items:start;}
+  @media(max-width:900px){.order-shell{grid-template-columns:1fr;}}
+  .steps{display:flex; gap:8px; margin-bottom:28px;}
+  .step-dot{flex:1; height:3px; background:rgba(255,255,255,.1); border-radius:3px; overflow:hidden;}
+  .step-dot i{display:block; height:100%; width:0%; background:var(--gold); transition:width .4s ease;}
+  .banner{
+    display:flex; gap:12px; align-items:flex-start; background:rgba(212,175,55,.08); border:1px solid var(--gold);
+    border-radius:var(--radius); padding:14px 16px; margin-bottom:24px; font-size:.85rem; color:var(--champagne);
+  }
+  .banner b{color:var(--gold);}
+  .field{margin-bottom:18px;}
+  .field label{display:block; font-size:.8rem; color:#b9b4a6; margin-bottom:6px; letter-spacing:.02em;}
+  .field input, .field select, .field textarea{
+    width:100%; background:var(--slate-2); border:1px solid var(--line); color:var(--ivory);
+    padding:12px 14px; border-radius:var(--radius); font-family:'Manrope',sans-serif; font-size:.92rem;
+    transition:border-color .25s ease, box-shadow .25s ease;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,.15);
+  }
+  .field .err{color:var(--err); font-size:.75rem; margin-top:5px; display:none;}
+  .field.invalid input, .field.invalid textarea{border-color:var(--err);}
+  .field.invalid .err{display:block;}
+  .qty{display:flex; align-items:center; gap:12px;}
+  .qty button{
+    width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--slate-2); color:var(--gold);
+    cursor:pointer; font-size:1rem; transition:.2s;
+  }
+  .qty button:hover{border-color:var(--gold); box-shadow:0 0 10px rgba(212,175,55,.3);}
+  .qty span{min-width:24px; text-align:center;}
+  .upload{
+    border:1px dashed var(--line); border-radius:var(--radius); padding:22px; text-align:center; cursor:pointer;
+    font-size:.85rem; color:#b9b4a6; transition:border-color .25s ease, background .25s ease;
+  }
+  .upload:hover{border-color:var(--gold); background:rgba(212,175,55,.05);}
+  .upload input{display:none;}
+  .form-nav{display:flex; justify-content:space-between; margin-top:28px;}
+  .info-toggle{
+    background:none; border:none; color:var(--gold); font-size:.8rem; cursor:pointer; text-decoration:underline; padding:0; margin-top:6px;
+  }
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(4px); z-index:80;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-backdrop.show{display:flex;}
+  .modal{
+    background:var(--slate); border:1px solid var(--gold); border-radius:var(--radius);
+    max-width:520px; width:100%; padding:32px; position:relative; animation:pop .25s ease;
+    max-height:85vh; overflow-y:auto;
+  }
+  @keyframes pop{from{opacity:0; transform:scale(.94);} to{opacity:1; transform:scale(1);}}
+  .modal .close{position:absolute; top:16px; right:18px; background:none; border:none; color:#c9c5ba; font-size:1.3rem; cursor:pointer;}
+  .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:20px 0;}
+  .keypad button{
+    padding:16px 0; background:var(--slate-2); border:1px solid var(--line); color:var(--champagne);
+    font-size:1.1rem; border-radius:var(--radius); cursor:pointer; transition:.2s;
+  }
+  .keypad button:hover{border-color:var(--gold); box-shadow:0 0 12px rgba(212,175,55,.3);}
+  .pin-display{display:flex; gap:10px; justify-content:center; margin:18px 0;}
+  .pin-dot{width:14px; height:14px; border-radius:50%; border:1px solid var(--gold);}
+  .pin-dot.filled{background:var(--gold);}
+  .shake{animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+
+  /* admin table */
+  .admin-panel{display:none;}
+  .admin-panel.show{display:block;}
+  table{width:100%; border-collapse:collapse; font-size:.85rem;}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line);}
+  th{color:var(--gold); font-weight:600; font-size:.75rem; letter-spacing:.05em; text-transform:uppercase;}
+  tr:hover td{background:rgba(212,175,55,.04);}
+  .empty-state{padding:40px 20px; text-align:center; color:#8f8a7c; border:1px dashed var(--line); border-radius:var(--radius);}
+
+  /* contact */
+  .contact-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px;}
+  .contact-card{background:var(--slate); border:1px solid var(--line); border-radius:var(--radius); padding:22px; display:flex; flex-direction:column; gap:10px;}
+  .contact-card .val{font-size:.95rem; color:var(--champagne);}
+  .copy-btn{align-self:flex-start; font-size:.75rem; border:1px solid var(--line); background:none; color:#b9b4a6; padding:5px 10px; border-radius:var(--radius); cursor:pointer;}
+  .copy-btn:hover{border-color:var(--gold); color:var(--gold);}
+
+  footer{padding:40px 0; text-align:center; color:#77725f; font-size:.8rem;}
+  .toast{
+    position:fixed; bottom:24px; right:24px; background:var(--slate); border:1px solid var(--gold);
+    color:var(--champagne); padding:14px 20px; border-radius:var(--radius); font-size:.85rem; z-index:100;
+    transform:translateY(120%); transition:transform .35s ease; box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  .toast.show{transform:translateY(0);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  /* ---------- entrance animations ---------- */
+  .reveal{opacity:0; transform:translateY(26px); transition:opacity .8s ease, transform .8s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+  .reveal-img{opacity:0; transform:scale(.94); transition:opacity .9s ease, transform .9s ease;}
+  .reveal-img.in{opacity:1; transform:scale(1);}
+
+  .shimmer-text{
+    background:linear-gradient(90deg, var(--champagne) 0%, var(--gold) 25%, var(--champagne) 50%, var(--gold) 75%, var(--champagne) 100%);
+    background-size:250% auto;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:shimmer 6s linear infinite;
+  }
+  @keyframes shimmer{ to{ background-position:-250% center; } }
+
+  .hero-bg-img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    opacity:0; filter:grayscale(35%) brightness(.45) contrast(1.05);
+    animation:heroFade 2.4s ease forwards;
+    animation-delay:.15s;
+  }
+  @keyframes heroFade{ from{opacity:0; transform:scale(1.06);} to{opacity:.55; transform:scale(1);} }
+
+  .avatar-img{
+    width:64px; height:64px; border-radius:50%; margin-bottom:16px; display:block;
+    border:1px solid var(--line); background:var(--slate-2);
+    transition:transform .35s ease, box-shadow .35s ease;
+  }
+  .card:hover .avatar-img{ transform:scale(1.08); box-shadow:0 0 20px rgba(212,175,55,.35); }
+
+  .form-step.fade-in{ animation:stepFade .45s ease; }
+  @keyframes stepFade{ from{opacity:0; transform:translateX(14px);} to{opacity:1; transform:translateX(0);} }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="brand"><span class="mark">N</span> Nepal Projection</div>
+    <div class="nav-links" id="navLinks">
+      <button class="admin-btn" onclick="openAdminModal()">Registry Settings</button>
+    </div>
+    <button class="menu-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">☰</button>
+  </nav>
+</header>
+
+<section class="hero">
+  <img class="hero-bg-img" src="https://picsum.photos/seed/nepalprojection/1600/1000" alt="" onerror="this.remove()">
+  <div class="particles" id="particles"></div>
+  <div class="wrap hero-inner">
+    <div class="reveal in">
+      <span class="eyebrow">ONE-TIME SERVICE COMMISSIONS</span>
+      <h1 class="shimmer-text">Order craftsmanship,<br>not a checkout.</h1>
+      <p style="max-width:480px; margin-top:20px;">Nepal Projection handles one-time service commissions end to end — from first request to final delivery — with a small, directly reachable team.</p>
+    </div>
+    <div class="hero-visual">
+      <div class="orbit"></div>
+      <svg viewBox="0 0 100 100" fill="none">
+        <polygon points="50,8 90,50 50,92 10,50" stroke="#d4af37" stroke-width="1.2"/>
+        <circle cx="50" cy="50" r="20" stroke="#d4af37" stroke-width="1"/>
+        <circle cx="50" cy="50" r="3" fill="#d4af37"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">INVESTMENT</span>
+      <h2>Pricing that scales with the work</h2>
+      <p>Every commission starts with a fixed baseline. Complexity, integrations, and turnaround shape the rest.</p>
+    </div>
+    <div class="tiers">
+      <div class="tier reveal">
+        <h3>Essentials</h3>
+        <div class="price">$700<span style="font-size:1rem;color:#8f8a7c;"> start</span></div>
+        <p>For a single, well-defined piece with standard finishing.</p>
+        <ul>
+          <li>1 revision round</li>
+          <li>Standard materials</li>
+          <li>3–4 week turnaround</li>
+        </ul>
+      </div>
+      <div class="tier featured reveal">
+        <h3>Signature</h3>
+        <div class="price">$3,200<span style="font-size:1rem;color:#8f8a7c;"> start</span></div>
+        <p>Our most-booked tier — full customization with dedicated support.</p>
+        <ul>
+          <li>3 revision rounds</li>
+          <li>Premium materials</li>
+          <li>Dedicated project lead</li>
+        </ul>
+      </div>
+      <div class="tier reveal">
+        <h3>Atelier Private</h3>
+        <div class="price">Up to $20,000</div>
+        <p>Fully bespoke, multi-piece, or technically complex commissions.</p>
+        <ul>
+          <li>Unlimited revisions</li>
+          <li>On-site consultation</li>
+          <li>White-glove delivery</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="calc reveal">
+      <div>
+        <h3>Estimate your commission</h3>
+        <div class="calc-row"><label>Custom materials</label>
+          <label class="switch"><input type="checkbox" onchange="updateCalc()" data-add="450"><span class="slider"></span></label>
+        </div>
+        <div class="calc-row"><label>Advanced technical integration</label>
+          <label class="switch"><input type="checkbox" onchange="updateCalc()" data-add="2200"><span class="slider"></span></label>
+        </div>
+        <div class="calc-row"><label>Rush turnaround (under 2 weeks)</label>
+          <label class="switch"><input type="checkbox" onchange="updateCalc()" data-add="900"><span class="slider"></span></label>
+        </div>
+        <div class="calc-row"><label>Multi-piece set</label>
+          <label class="switch"><input type="checkbox" onchange="updateCalc()" data-add="3500"><span class="slider"></span></label>
+        </div>
+      </div>
+      <div class="calc-total">
+        <span style="color:#8f8a7c; font-size:.85rem;">Estimated starting price</span>
+        <span class="amount" id="calcAmount">$700</span>
+        <span style="color:#8f8a7c; font-size:.78rem; margin-top:8px;">Final pricing confirmed after consultation.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="team">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">THE SQUAD</span>
+      <h2>A small team, directly reachable</h2>
+      <p>No ticket queue — every commission is handled by a named lead from day one.</p>
+    </div>
+    <div class="team-grid">
+      <div class="card reveal">
+        <h3>Baibhav</h3>
+        <span class="role">Word Lead</span>
+        <p>Leads the squad end to end and signs off on every commission before it ships.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Nishang</h3>
+        <span class="role">Fund Manager</span>
+        <p>Handles pricing, payments, and budgeting for every commission.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Aaryan and Kabir</h3>
+        <span class="role">Customer Care</span>
+        <p>Your first point of contact for order questions, changes, and delivery updates.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="showcase">
+  <div class="wrap" style="text-align:center;">
+    <img class="reveal-img" src="https://s3-cdn.cmlabs.co/page/2023/10/04/web-developer-definition-skills-and-responsibilities-908401.png" alt="Showcase" style="max-width:100%; border-radius:var(--radius); border:1px solid var(--line);" onerror="this.closest('section').remove()">
+  </div>
+</section>
+
+<section id="order">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">PLACE AN ORDER</span>
+      <h2>Tell us what you're commissioning</h2>
+      <p>Four short steps. You'll get a confirmation email once it's submitted.</p>
+    </div>
+
+    <div class="order-shell">
+      <div>
+        <div class="banner">
+          <span>⚠</span>
+          <span><b>Double-check your email</b> before submitting — your order confirmation and all follow-up communication go to the address you enter below. We can't recover a misspelled address.</span>
+        </div>
+        <button class="info-toggle" onclick="openInfoModal()">How this site was built &amp; secured →</button>
+      </div>
+
+      <div>
+        <div class="steps">
+          <div class="step-dot"><i id="dot1"></i></div>
+          <div class="step-dot"><i id="dot2"></i></div>
+          <div class="step-dot"><i id="dot3"></i></div>
+        </div>
+
+        <form id="orderForm">
+          <!-- STEP 1 -->
+          <div class="form-step" data-step="1">
+            <div class="field" id="f-name">
+              <label>Full name</label>
+              <input type="text" name="name" placeholder="Jordan Lee">
+              <div class="err">Please enter your name.</div>
+            </div>
+            <div class="field" id="f-email">
+              <label>Email address</label>
+              <input type="email" name="email" placeholder="you@example.com">
+              <div class="err">Enter a valid email address.</div>
+            </div>
+            <div class="field">
+              <label>Item type</label>
+              <select name="item">
+                <option>Custom furniture piece</option>
+                <option>Jewelry commission</option>
+                <option>Interior installation</option>
+                <option>Connected/technical product</option>
+                <option>Other — describe below</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Quantity</label>
+              <div class="qty">
+                <button type="button" onclick="stepQty(-1)">−</button>
+                <span id="qtyVal">1</span>
+                <button type="button" onclick="stepQty(1)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="form-step" data-step="2" style="display:none;">
+            <div class="field" id="f-address">
+              <label>Delivery address</label>
+              <textarea name="address" rows="3" placeholder="Street, city, postal code, country"></textarea>
+              <div class="err">Please enter a delivery address.</div>
+            </div>
+            <div class="field">
+              <label>Preferred delivery window</label>
+              <input type="date" name="date">
+            </div>
+            <div class="field">
+              <label>Reference files (sketches, inspiration, specs)</label>
+              <label class="upload">
+                <input type="file" id="fileInput" multiple onchange="handleFile(this)">
+                <span id="uploadLabel">Click to upload, or drag files here</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- STEP 3 -->
+          <div class="form-step" data-step="3" style="display:none;">
+            <div class="field">
+              <label>Customization notes</label>
+              <textarea name="notes" rows="4" placeholder="Materials, colors, dimensions, anything else the team should know"></textarea>
+            </div>
+            <div class="field">
+              <label>Budget comfort zone</label>
+              <select name="budget">
+                <option>$700 – $1,500</option>
+                <option>$1,500 – $5,000</option>
+                <option>$5,000 – $12,000</option>
+                <option>$12,000 – $20,000</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-nav">
+            <button type="button" class="btn btn-ghost" id="prevBtn" onclick="changeStep(-1)" style="visibility:hidden;">Back</button>
+            <button type="button" class="btn btn-gold" id="nextBtn" onclick="changeStep(1)">Continue</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">REACH US</span>
+      <h2>Talk to a human</h2>
+    </div>
+    <div class="contact-grid" style="max-width:340px;">
+      <div class="contact-card reveal">
+        <span style="color:#8f8a7c;font-size:.78rem;">EMAIL</span>
+        <span class="val">nepalprojection13@gmail.com</span>
+        <div style="display:flex; gap:8px;">
+          <a href="mailto:nepalprojection13@gmail.com" class="copy-btn" style="text-decoration:none;">Email us</a>
+          <button class="copy-btn" onclick="copyText('nepalprojection13@gmail.com', this)">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>© 2026 Nepal Projection. All rights reserved.</footer>
+
+<!-- INFO MODAL -->
+<div class="modal-backdrop" id="infoModal">
+  <div class="modal">
+    <button class="close" onclick="closeModal('infoModal')">×</button>
+    <h3>How this site is built</h3>
+    <p><b>Design:</b> a restrained black/gold palette, one accent color, and motion reserved for hover and step transitions rather than scattered page-load animation.</p>
+    <p><b>Front end:</b> a single static HTML/CSS/JS file — no framework build step required, so it can be hosted anywhere.</p>
+    <p><b>Security note:</b> the admin panel on this demo uses a client-side PIN for demonstration only. A real deployment needs server-side authentication (hashed credentials, rate-limiting, session tokens) and a real database — see the note in the admin panel for what to add.</p>
+    <p><b>Data:</b> by default, orders are kept in memory for this browser session only. Once a Firebase project is connected (see the code comments), orders sync live across every device instead.</p>
+  </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div class="modal-backdrop" id="adminModal">
+  <div class="modal">
+    <button class="close" onclick="closeModal('adminModal')">×</button>
+    <div id="pinScreen">
+      <h3>Registry Access</h3>
+      <p>Enter the access code to view the order registry.</p>
+      <div class="pin-display" id="pinDisplay"></div>
+      <div class="keypad">
+        <button onclick="pressKey('1')">1</button><button onclick="pressKey('2')">2</button><button onclick="pressKey('3')">3</button>
+        <button onclick="pressKey('4')">4</button><button onclick="pressKey('5')">5</button><button onclick="pressKey('6')">6</button>
+        <button onclick="pressKey('7')">7</button><button onclick="pressKey('8')">8</button><button onclick="pressKey('9')">9</button>
+        <button onclick="clearPin()">Clear</button><button onclick="pressKey('0')">0</button><button onclick="backspacePin()">⌫</button>
+      </div>
+      <p id="pinError" style="color:var(--err); font-size:.8rem; display:none;">Incorrect code. <span id="attemptsLeft"></span></p>
+    </div>
+    <div class="admin-panel" id="adminPanel">
+      <h3>Live Order Registry</h3>
+      <p style="font-size:.8rem;" id="modeNote">Session-only view · entries older than 14 days are auto-hidden in a real deployment. This demo stores orders in memory only — connect Firebase/Supabase for real persistence and cross-device sync.</p>
+      <div id="orderTableWrap"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* =========================================================
+   CROSS-DEVICE SYNC (Firebase Firestore) — ONE-TIME SETUP
+   -----------------------------------------------------------
+   1. Go to https://console.firebase.google.com → Add project (free tier).
+   2. In the project, click the </> (web app) icon to register a web app.
+   3. Copy the firebaseConfig object it shows you.
+   4. Paste it below, replacing FIREBASE_CONFIG entirely.
+   5. In Firestore Database → Rules, start with:
+
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /orders/{orderId} {
+              allow create: if true;
+              allow read: if true;
+              // NOTE: this keeps reads open at the database level — the PIN
+              // on this page only gates the UI, not the data itself. Anyone
+              // who finds your Firestore URL could read orders directly.
+              // For real protection, add Firebase Authentication and change
+              // "allow read" to check a signed-in admin account instead.
+            }
+          }
+        }
+
+   Until FIREBASE_CONFIG below is filled in with real values, the site runs
+   in LOCAL DEMO MODE: orders stay in this browser's memory only, exactly
+   like before — nothing breaks if you skip this.
+   ========================================================= */
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+let db = null;
+let liveMode = false;
+if (FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY") {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    liveMode = true;
+  } catch(e){ console.error('Firebase init failed — falling back to local mode.', e); }
+}
+</script>
+<script>
+/* ---------- scroll entrance animations ---------- */
+const revealObserver = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){ e.target.classList.add('in'); revealObserver.unobserve(e.target); }
+  });
+}, {threshold:0.15});
+document.querySelectorAll('.reveal, .reveal-img').forEach(el=>revealObserver.observe(el));
+
+/* ---------- particles ---------- */
+const particleWrap = document.getElementById('particles');
+for(let i=0;i<18;i++){
+  const p = document.createElement('div');
+  p.className='particle';
+  p.style.left = Math.random()*100+'%';
+  p.style.animationDelay = (Math.random()*14)+'s';
+  p.style.animationDuration = (10+Math.random()*8)+'s';
+  particleWrap.appendChild(p);
+}
+
+/* ---------- pricing calculator ---------- */
+function updateCalc(){
+  let total = 700;
+  document.querySelectorAll('.calc input[type=checkbox]').forEach(cb=>{
+    if(cb.checked) total += parseInt(cb.dataset.add);
+  });
+  const el = document.getElementById('calcAmount');
+  el.textContent = '$' + total.toLocaleString();
+  el.classList.add('bump');
+  setTimeout(()=>el.classList.remove('bump'),150);
+}
+
+/* ---------- qty stepper ---------- */
+let qty = 1;
+function stepQty(d){
+  qty = Math.max(1, qty+d);
+  document.getElementById('qtyVal').textContent = qty;
+}
+
+/* ---------- file upload ---------- */
+function handleFile(input){
+  const label = document.getElementById('uploadLabel');
+  label.textContent = input.files.length ? input.files.length + ' file(s) selected' : 'Click to upload, or drag files here';
+}
+
+/* ---------- multi-step form ---------- */
+let currentStep = 1;
+const totalSteps = 3;
+function updateDots(){
+  for(let i=1;i<=totalSteps;i++){
+    document.getElementById('dot'+i).style.width = (i<=currentStep? (i<currentStep?'100%':'50%') : '0%');
+  }
+}
+function validateStep(step){
+  let ok = true;
+  if(step===1){
+    const name = document.querySelector('[name=name]');
+    const email = document.querySelector('[name=email]');
+    const nameField = document.getElementById('f-name');
+    const emailField = document.getElementById('f-email');
+    if(!name.value.trim()){ nameField.classList.add('invalid'); ok=false; } else nameField.classList.remove('invalid');
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
+    if(!emailOk){ emailField.classList.add('invalid'); ok=false; } else emailField.classList.remove('invalid');
+  }
+  if(step===2){
+    const addr = document.querySelector('[name=address]');
+    const addrField = document.getElementById('f-address');
+    if(!addr.value.trim()){ addrField.classList.add('invalid'); ok=false; } else addrField.classList.remove('invalid');
+  }
+  return ok;
+}
+function changeStep(dir){
+  if(dir===1 && !validateStep(currentStep)) return;
+  const steps = document.querySelectorAll('.form-step');
+  if(dir===1 && currentStep===totalSteps){
+    submitOrder();
+    return;
+  }
+  steps[currentStep-1].style.display='none';
+  steps[currentStep-1].classList.remove('fade-in');
+  currentStep += dir;
+  steps[currentStep-1].style.display='block';
+  steps[currentStep-1].classList.add('fade-in');
+  document.getElementById('prevBtn').style.visibility = currentStep===1?'hidden':'visible';
+  document.getElementById('nextBtn').textContent = currentStep===totalSteps? 'Submit order':'Continue';
+  updateDots();
+}
+updateDots();
+
+const localOrders = []; // used only when Firebase isn't configured (local demo mode)
+function submitOrder(){
+  const form = document.getElementById('orderForm');
+  const data = Object.fromEntries(new FormData(form).entries());
+  data.quantity = qty;
+  data.submittedAt = new Date().toISOString();
+
+  if(liveMode){
+    db.collection('orders').add(data)
+      .then(()=> showToast('Order submitted — confirmation sent to ' + data.email))
+      .catch(err=>{ console.error(err); showToast('Could not submit — check your connection and try again.'); });
+  } else {
+    localOrders.push(data);
+    showToast('Order submitted — confirmation sent to ' + data.email);
+  }
+
+  form.reset();
+  currentStep = 1;
+  document.querySelectorAll('.form-step').forEach((s,i)=> s.style.display = i===0?'block':'none');
+  document.getElementById('prevBtn').style.visibility='hidden';
+  document.getElementById('nextBtn').textContent='Continue';
+  qty = 1; document.getElementById('qtyVal').textContent = 1;
+  updateDots();
+}
+
+/* ---------- toast ---------- */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+/* ---------- copy to clipboard ---------- */
+function copyText(text, btn){
+  navigator.clipboard.writeText(text).then(()=>{
+    const old = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(()=>btn.textContent = old, 1500);
+  });
+}
+
+/* ---------- modals ---------- */
+function openInfoModal(){ document.getElementById('infoModal').classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+/* ---------- admin pin (DEMO ONLY — see note) ---------- */
+const REGISTRY_PIN = '9807774156';
+const PIN_LENGTH = REGISTRY_PIN.length;
+let pinInput = '';
+let attempts = 0;
+const MAX_ATTEMPTS = 5;
+let lockedUntil = 0;
+
+function openAdminModal(){
+  document.getElementById('adminModal').classList.add('show');
+  document.getElementById('pinScreen').style.display='block';
+  document.getElementById('adminPanel').classList.remove('show');
+  pinInput=''; renderPin();
+}
+function renderPin(){
+  const wrap = document.getElementById('pinDisplay');
+  wrap.innerHTML = '';
+  for(let i=0;i<PIN_LENGTH;i++){
+    const d = document.createElement('div');
+    d.className = 'pin-dot' + (i < pinInput.length ? ' filled' : '');
+    wrap.appendChild(d);
+  }
+}
+function pressKey(k){
+  if(Date.now() < lockedUntil) return;
+  if(pinInput.length>=PIN_LENGTH) return;
+  pinInput += k;
+  renderPin();
+  if(pinInput.length===PIN_LENGTH) checkPin();
+}
+function clearPin(){ pinInput=''; renderPin(); }
+function backspacePin(){ pinInput = pinInput.slice(0,-1); renderPin(); }
+
+function checkPin(){
+  if(pinInput === REGISTRY_PIN){
+    document.getElementById('pinError').style.display='none';
+    document.getElementById('pinScreen').style.display='none';
+    document.getElementById('adminPanel').classList.add('show');
+    renderOrders();
+  } else {
+    attempts++;
+    const modal = document.querySelector('#adminModal .modal');
+    modal.classList.add('shake');
+    setTimeout(()=>modal.classList.remove('shake'), 400);
+    document.getElementById('pinError').style.display='block';
+    if(attempts >= MAX_ATTEMPTS){
+      lockedUntil = Date.now() + 30000;
+      document.getElementById('attemptsLeft').textContent = 'Too many attempts — locked for 30 seconds.';
+    } else {
+      document.getElementById('attemptsLeft').textContent = (MAX_ATTEMPTS-attempts)+' attempts remaining.';
+    }
+    pinInput=''; renderPin();
+  }
+}
+
+function renderOrders(){
+  const wrap = document.getElementById('orderTableWrap');
+  const modeNote = document.getElementById('modeNote');
+  if(liveMode){
+    modeNote.textContent = 'Live registry — synced across every device via Firebase. Entries older than 14 days are hidden automatically.';
+    wrap.innerHTML = '<div class="empty-state">Loading orders…</div>';
+    db.collection('orders').orderBy('submittedAt','desc').get().then(snapshot=>{
+      const cutoff = Date.now() - 14*24*60*60*1000;
+      const rows = [];
+      snapshot.forEach(doc=>{
+        const o = doc.data();
+        if(new Date(o.submittedAt).getTime() >= cutoff){ rows.push(o); }
+      });
+      paintOrderTable(wrap, rows, true);
+    }).catch(err=>{
+      console.error(err);
+      wrap.innerHTML = '<div class="empty-state">Could not load orders — check your Firebase config and Firestore rules.</div>';
+    });
+  } else {
+    modeNote.textContent = 'Local demo mode — Firebase isn\'t configured yet, so orders only appear in this browser tab. See the code comments near the top of the script for one-time setup steps.';
+    paintOrderTable(wrap, localOrders, false);
+  }
+}
+
+function paintOrderTable(wrap, list, isLive){
+  if(list.length===0){
+    wrap.innerHTML = '<div class="empty-state">No orders yet' + (isLive?'':' this session') + '. Submit the order form to see it appear here.</div>';
+    return;
+  }
+  let rows = list.map(o=>`
+    <tr>
+      <td>${o.name||''}</td>
+      <td>${o.email||''}</td>
+      <td>${o.item||''}</td>
+      <td>${o.quantity||1}</td>
+      <td>${o.budget||''}</td>
+      <td>${new Date(o.submittedAt).toLocaleString()}</td>
+    </tr>`).join('');
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Name</th><th>Email</th><th>Item</th><th>Qty</th><th>Budget</th><th>Submitted</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+</script>
+</body>
+</html>
